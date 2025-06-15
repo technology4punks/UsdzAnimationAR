@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizzatore AR USDZ</title>
+    <!-- Carica Tailwind CSS per uno styling rapido e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Stili personalizzati per il font Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #f0f2f5; /* Sfondo leggero */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem; /* Padding generale per i dispositivi mobili */
+            box-sizing: border-box; /* Include padding nel calcolo della larghezza */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container bg-white p-8 rounded-lg shadow-xl max-w-lg w-full text-center border border-gray-200">
+        <h1 class="text-3xl md:text-4xl font-extrabold mb-6 text-gray-900 leading-tight">
+            Visualizzatore AR <span class="text-indigo-600">USDZ</span>
+        </h1>
+        <p class="text-base md:text-lg text-gray-600 mb-8">
+            Tocca il pulsante qui sotto per visualizzare il modello 3D in realtà aumentata sul tuo iPhone.
+            Questa funzionalità richiede Safari su iOS.
+        </p>
+
+        <!-- Il link principale per la visualizzazione AR -->
+        <!-- Il suo href sarà impostato dal JavaScript, ma come fallback usa un percorso relativo -->
+        <a id="arLink"
+           href="/meshooting.usdz"
+           rel="ar"
+           class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2 -ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6.75 9.25a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5z" clip-rule="evenodd"></path>
+            </svg>
+            Visualizza in AR
+        </a>
+
+        <!-- Messaggio di avviso per dispositivi non supportati -->
+        <div id="deviceWarning" class="mt-8 p-4 bg-yellow-100 border border-yellow-200 text-yellow-800 rounded-lg hidden">
+            <p class="font-medium">Attenzione:</p>
+            <p>Per una piena esperienza di realtà aumentata, apri questa pagina su un **iPhone** utilizzando il browser **Safari**.</p>
+            <p class="mt-2 text-sm">
+                La funzionalità AR nativa richiede un dispositivo iOS e il browser Safari.
+            </p>
+        </div>
+
+        <p class="mt-8 text-sm text-gray-500">
+            Modello: meshooting.usdz (da GitHub Pages)
+        </p>
+    </div>
+
+    <script>
+        // Ottieni riferimenti agli elementi DOM
+        const arLink = document.getElementById('arLink');
+        const deviceWarning = document.getElementById('deviceWarning');
+
+        // URL del modello USDZ da utilizzare.
+        // Questo è l'URL corretto per un file USDZ ospitato su GitHub Pages
+        // nel repository '3dmodels' sotto l'utente 'technology4punks'.
+        const usdzModelUrl = "https://technology4punks.github.io/3dmodels/meshooting.usdz";
+
+        // Imposta l'href del link AR al modello specificato
+        arLink.href = usdzModelUrl;
+
+        /**
+         * Funzione per rilevare se il dispositivo è iOS.
+         * Utilizza il user agent per controllare la presenza di 'iPhone', 'iPad', 'iPod'.
+         * @returns {boolean} True se il dispositivo è iOS, altrimenti False.
+         */
+        function isIOS() {
+            // Controlla la piattaforma per i dispositivi Apple
+            return [
+                'iPad Simulator',
+                'iPhone Simulator',
+                'iPod Simulator',
+                'iPad',
+                'iPhone',
+                'iPod'
+            ].includes(navigator.platform)
+            // Per iPad su iOS 13+ che può avere un user agent desktop, controlla anche 'MacIntel' combinato con 'ontouchend' (rilevamento del touch)
+            || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+        }
+
+        /**
+         * Funzione per rilevare se il browser è Safari.
+         * @returns {boolean} True se il browser è Safari, altrimenti False.
+         */
+        function isSafari() {
+            // Controlla il user agent per la stringa "Safari" e si assicura che non sia Chrome o Android (che a volte spoofano Safari)
+            return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        }
+
+        /**
+         * Funzione per aggiornare lo stato dell'interfaccia utente
+         * in base al dispositivo e al browser dell'utente.
+         */
+        function updateUIState() {
+            if (!isIOS() || !isSafari()) {
+                // Se non è iOS o non è Safari, mostra l'avviso e disabilita il link AR
+                deviceWarning.classList.remove('hidden');
+                arLink.style.pointerEvents = 'none'; // Disabilita i clic sul link
+                arLink.classList.add('opacity-50', 'cursor-not-allowed'); // Rendi il link meno visibile
+                // Aggiorna il testo dell'avviso per i dispositivi non supportati
+                deviceWarning.innerHTML = `
+                    <p class="font-medium">Attenzione:</p>
+                    <p>Per una piena esperienza di realtà aumentata, apri questa pagina su un **iPhone** utilizzando il browser **Safari**.</p>
+                    <p class="mt-2 text-sm">
+                        La funzionalità AR nativa richiede un dispositivo iOS e il browser Safari.
+                    </p>
+                `;
+            } else {
+                // Se è iOS e Safari, nascondi l'avviso generale e abilita il link AR
+                deviceWarning.classList.add('hidden');
+                arLink.style.pointerEvents = 'auto';
+                arLink.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Al caricamento della finestra, controlla il dispositivo e il browser per impostare lo stato iniziale dell'UI
+        window.onload = function() {
+            updateUIState();
+        };
+
+        // Aggiungi un listener per il caso in cui l'utente clicca ma la funzionalità non è disponibile
+        arLink.addEventListener('click', function(event) {
+            // Se non è iOS o Safari, impedisci l'azione predefinita
+            if (!isIOS() || !isSafari()) {
+                event.preventDefault(); // Impedisce la navigazione del link
+                console.warn("Il link AR è stato cliccato ma la funzionalità non è supportata (non iOS/Safari).");
+            }
+        });
+    </script>
+</body>
+</html>
